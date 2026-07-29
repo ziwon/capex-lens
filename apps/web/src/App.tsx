@@ -122,12 +122,13 @@ export function App() {
   }, []);
 
   const regime = REGIME_META[snapshot.regime];
+  const live = snapshot.mode === "live";
   return (
     <div className="site-shell">
       <header className="topbar">
         <a className="brand" href="/" aria-label="Capex Lens home"><span className="brand-mark">C</span><span><strong>Capex Lens</strong><small>AI investment-cycle intelligence</small></span></a>
         <nav><a href="#dashboard">Dashboard</a><a href="#evidence">Evidence</a><a href="#methodology">Methodology</a></nav>
-        <span className="status-pill">Private MVP</span>
+        <span className="status-pill">{live ? "Live market data" : "Demo mode"}</span>
       </header>
 
       <main>
@@ -139,7 +140,16 @@ export function App() {
           <div className="hero-score"><span>Divergence</span><strong>{snapshot.divergenceScore}</strong><small>Supply minus monetization</small></div>
         </section>
 
-        <div className="demo-banner"><strong>Illustrative data only.</strong><span>{source === "api" ? "Served by the demo Worker API." : "Using the frontend fallback snapshot."} Live providers and D1 are intentionally not enabled yet.</span></div>
+        <div className="demo-banner">
+          <strong>{live ? "Live market snapshot." : "Illustrative data only."}</strong>
+          <span>
+            {live
+              ? "Served from the validated Cloudflare data pipeline. Monetization remains explicitly market-implied."
+              : source === "api"
+                ? "Served by the demo Worker API while live provider data is unavailable."
+                : "Using the frontend fallback snapshot because the API is unavailable."}
+          </span>
+        </div>
         <section className="score-grid"><ScoreCard axis={snapshot.axes.supply} /><ScoreCard axis={snapshot.axes.monetization} /><ScoreCard axis={snapshot.axes.macro} /></section>
         <section className="analysis-grid"><RegimeMap snapshot={snapshot} /><DivergenceChart snapshot={snapshot} /></section>
         <section className="indicator-grid" id="evidence">{snapshot.indicators.map((indicator) => <IndicatorCard key={indicator.id} indicator={indicator} />)}</section>
@@ -161,7 +171,7 @@ export function App() {
           <p>Scores are deterministic, versioned, point-in-time calculations. An LLM may summarize validated changes and counter-evidence, but it never invents observations or calculates the regime. Every live value will carry freshness, coverage, and provenance metadata.</p>
         </section>
       </main>
-      <footer><span>Capex Lens · private MVP</span><span>Research context only · not investment advice</span></footer>
+      <footer><span>Capex Lens · production MVP</span><span>Research context only · not investment advice</span></footer>
     </div>
   );
 }

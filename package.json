@@ -11,14 +11,15 @@
     "dev": "pnpm --filter @capex-lens/web dev",
     "dev:edge": "pnpm build && wrangler dev",
     "build": "pnpm --filter @capex-lens/web build",
-    "typecheck": "pnpm -r --if-present typecheck && tsc -p tsconfig.scripts.json",
+    "typecheck": "pnpm -r --if-present typecheck && tsc -p tsconfig.scripts.json && tsc -p apps/web/functions/tsconfig.json",
     "test": "pnpm -r --if-present test && vitest run --config scripts/vitest.config.ts scripts/lib/build-snapshot.test.ts",
     "collect:demo": "tsx scripts/collect-demo.ts",
     "collect:live": "tsx scripts/collect-live.ts",
     "publish:live": "bash scripts/publish-cloudflare.sh",
     "db:migrate:local": "wrangler d1 migrations apply capex-lens --local",
     "db:migrate:remote": "wrangler d1 migrations apply capex-lens --remote",
-    "deploy": "pnpm build && wrangler deploy"
+    "deploy": "pnpm build && wrangler deploy",
+    "deploy:pages": "pnpm build && wrangler pages deploy dist --cwd apps/web --project-name capex --branch main"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^5.20260719.1",
