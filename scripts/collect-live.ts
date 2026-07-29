@@ -42,6 +42,10 @@ async function main(): Promise<void> {
   const from = process.env.COLLECTION_START_DATE ?? dateDaysAgo(lookbackDays);
   const to = process.env.COLLECTION_END_DATE ?? new Date().toISOString().slice(0, 10);
   const creditsPerMinute = Number(process.env.TWELVE_DATA_CREDITS_PER_MINUTE ?? "8");
+  const maxBenchmarkAgeHours = Number(process.env.MAX_BENCHMARK_AGE_HOURS ?? "96");
+  if (!Number.isFinite(maxBenchmarkAgeHours) || maxBenchmarkAgeHours <= 0) {
+    throw new Error("MAX_BENCHMARK_AGE_HOURS must be a positive finite number");
+  }
 
   const marketProvider = new TwelveDataProvider({
     apiKey: requiredEnvironment("TWELVE_DATA_API_KEY"),
@@ -60,6 +64,7 @@ async function main(): Promise<void> {
     marketSymbols: MARKET_SYMBOLS.length,
     macroSeries: FRED_SERIES_IDS.length,
     creditsPerMinute,
+    maxBenchmarkAgeHours,
   }));
 
   const [bars, macro] = await Promise.all([
@@ -68,7 +73,7 @@ async function main(): Promise<void> {
   ]);
 
   const generatedAt = new Date().toISOString();
-  const snapshot = buildLiveSnapshot(bars, macro, generatedAt);
+  const snapshot = buildLiveSnapshot(bars, macro, generatedAt, { maxBenchmarkAgeHours });
   validateSnapshot(snapshot);
   const sql = renderIngestionSql(bars, macro, snapshot, process.env.GITHUB_SHA ?? "local");
 

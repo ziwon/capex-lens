@@ -33,6 +33,7 @@ Inspect the artifact:
 - `raw/macro/...`
 
 Confirm that coverage is at least 70%, timestamps are not in the future, and the snapshot is labelled `mode=live`.
+Confirm that `SOXX` and `QQQ` both match the snapshot `asOf` date and that their `availableAt` age is within `MAX_BENCHMARK_AGE_HOURS` (96 hours by default).
 
 ## 4. First publication
 
