@@ -1,0 +1,29 @@
+{
+  "name": "capex-lens",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Track the divergence between AI infrastructure momentum and hyperscaler monetization.",
+  "engines": {
+    "node": ">=22"
+  },
+  "packageManager": "pnpm@10.23.0",
+  "scripts": {
+    "dev": "pnpm --filter @capex-lens/web dev",
+    "dev:edge": "pnpm build && wrangler dev",
+    "build": "pnpm --filter @capex-lens/web build",
+    "typecheck": "pnpm -r --if-present typecheck && tsc -p tsconfig.scripts.json",
+    "test": "pnpm --filter @capex-lens/indicators test",
+    "collect:demo": "tsx scripts/collect-demo.ts",
+    "db:migrate:local": "wrangler d1 migrations apply capex-lens --local",
+    "db:migrate:remote": "wrangler d1 migrations apply capex-lens --remote",
+    "deploy": "pnpm build && wrangler deploy"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^5.20260719.1",
+    "@types/node": "^22.10.5",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.3",
+    "vitest": "^3.0.5",
+    "wrangler": "^4.61.1"
+  }
+}
