@@ -177,7 +177,7 @@ function basketDrawdown(bars: BarsBySymbol, members: UniverseMember[], date: str
 }
 
 function basketBreadth(bars: BarsBySymbol, members: UniverseMember[], date: string, period = 50): number | null {
-  const results = members.map((member) => {
+  const results: Array<number | null> = members.map((member) => {
     const prices = pricesThrough(bars.get(member.symbol), date);
     if (prices.length < period) return null;
     const latest = prices.at(-1);
@@ -526,7 +526,7 @@ export function buildLiveSnapshot(inputBars: DailyBar[], inputMacro: MacroObserv
     report: {
       period: isoWeek(asOf),
       headline: `${regimeMeta.label}: ${regimeMeta.description}`,
-      summary: `The live MVP classifies the market using adjusted daily prices and FRED macro series. The monetization axis remains a market-implied proxy until SEC and investor-relations fundamentals are connected.`,
+      summary: "The live MVP classifies the market using adjusted daily prices and FRED macro series. The monetization axis remains a market-implied proxy until SEC and investor-relations fundamentals are connected.",
       primaryDrivers: negativeEvidence.length > 0 ? negativeEvidence : ["No strongly negative primary driver crossed the current rule thresholds."],
       counterEvidence: positiveEvidence.length > 0 ? positiveEvidence : ["No strongly positive counter-evidence crossed the current rule thresholds."],
       watchNext: [
