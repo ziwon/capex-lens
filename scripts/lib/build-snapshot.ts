@@ -88,6 +88,13 @@ interface ComponentSpec {
   sourceMetricIds: string[];
 }
 
+export interface LiveSnapshotOptions {
+  maxBenchmarkAgeHours?: number;
+}
+
+const DEFAULT_MAX_BENCHMARK_AGE_HOURS = 96;
+const BENCHMARK_SYMBOLS = [SUPPLY_PROXY, NASDAQ_PROXY] as const;
+
 const SUPPLY_COMPONENTS: ComponentSpec[] = [
   { id: "supply-relative", label: "SOXX / QQQ relative strength", key: "supplyRelative60", weight: 0.25, sourceMetricIds: ["market.soxx_qqq.rs60"] },
   { id: "supply-breadth", label: "Constituent breadth", key: "supplyBreadth50", weight: 0.2, sourceMetricIds: ["market.supply.breadth50"] },
@@ -301,6 +308,43 @@ function latestBar(bars: BarsBySymbol, symbol: string, date: string): DailyBar |
   return barsThrough(bars.get(symbol), date).at(-1) ?? null;
 }
 
+function timestampMilliseconds(value: string, label: string): number {
+  const timestamp = Date.parse(value);
+  if (!Number.isFinite(timestamp)) throw new Error(`${label} must be a valid timestamp; received ${value}`);
+  return timestamp;
+}
+
+function validateBenchmarkFreshness(
+  bars: BarsBySymbol,
+  asOf: string,
+  generatedAt: string,
+  maxAgeHours: number,
+): number {
+  if (!Number.isFinite(maxAgeHours) || maxAgeHours <= 0) {
+    throw new Error(`maxBenchmarkAgeHours must be a positive finite number; received ${maxAgeHours}`);
+  }
+
+  const generatedAtMs = timestampMilliseconds(generatedAt, "generatedAt");
+  let oldestAgeHours = 0;
+  for (const symbol of BENCHMARK_SYMBOLS) {
+    const bar = latestBar(bars, symbol, asOf);
+    if (bar === null || bar.sessionDate !== asOf) {
+      throw new Error(`Benchmark ${symbol} is stale: latest session ${bar?.sessionDate ?? "missing"} does not match snapshot as-of ${asOf}`);
+    }
+
+    const availableAtMs = timestampMilliseconds(bar.provenance.availableAt, `${symbol} availableAt`);
+    const ageHours = (generatedAtMs - availableAtMs) / 3_600_000;
+    if (ageHours < 0) {
+      throw new Error(`Benchmark ${symbol} has a future availableAt timestamp: ${bar.provenance.availableAt}`);
+    }
+    if (ageHours > maxAgeHours) {
+      throw new Error(`Benchmark ${symbol} is stale: ${round(ageHours, 1)} hours old exceeds the ${maxAgeHours}-hour publication gate`);
+    }
+    oldestAgeHours = Math.max(oldestAgeHours, ageHours);
+  }
+  return oldestAgeHours;
+}
+
 function formatSigned(value: number, suffix = "%"): string {
   return `${value > 0 ? "+" : ""}${round(value, 1).toFixed(1)}${suffix}`;
 }
@@ -359,13 +403,25 @@ function axisScore(key: "supply" | "monetization" | "macro", label: string, curr
   };
 }
 
-export function buildLiveSnapshot(inputBars: DailyBar[], inputMacro: MacroObservation[], generatedAt = new Date().toISOString()): DashboardSnapshot {
+export function buildLiveSnapshot(
+  inputBars: DailyBar[],
+  inputMacro: MacroObservation[],
+  generatedAt = new Date().toISOString(),
+  options: LiveSnapshotOptions = {},
+): DashboardSnapshot {
+  timestampMilliseconds(generatedAt, "generatedAt");
   const bars = groupBars(inputBars.filter((bar) => bar.provenance.availableAt <= generatedAt));
   const macro = groupMacro(inputMacro.filter((observation) => observation.provenance.availableAt <= generatedAt));
   const proxyBars = bars.get(SUPPLY_PROXY) ?? [];
   if (proxyBars.length < 260) throw new Error(`Live snapshot requires at least 260 ${SUPPLY_PROXY} sessions; received ${proxyBars.length}`);
   const asOf = proxyBars.at(-1)?.sessionDate;
   if (asOf === undefined) throw new Error("No market as-of date is available");
+  const benchmarkAgeHours = validateBenchmarkFreshness(
+    bars,
+    asOf,
+    generatedAt,
+    options.maxBenchmarkAgeHours ?? DEFAULT_MAX_BENCHMARK_AGE_HOURS,
+  );
 
   const marketCoverage = MARKET_SYMBOLS.filter((symbol) => latestBar(bars, symbol, asOf)?.sessionDate === asOf).length / MARKET_SYMBOLS.length;
   if (marketCoverage < 0.7) throw new Error(`Market coverage ${round(marketCoverage * 100, 1)}% is below the 70% publication gate`);
@@ -375,17 +431,24 @@ export function buildLiveSnapshot(inputBars: DailyBar[], inputMacro: MacroObserv
   const dates = proxyBars.map((bar) => bar.sessionDate);
   const rawRows = dates.map((date) => computeRawMetrics(date, bars, macro));
   const currentIndex = rawRows.length - 1;
-  const current = scoreRow(rawRows, currentIndex);
-  if (current === null) throw new Error("Insufficient history to calculate live regime scores");
-
-  const selectedIndices = Array.from({ length: 12 }, (_, offset) => currentIndex - (11 - offset) * 5).filter((index) => index >= 0);
-  const trend: TrendPoint[] = [];
+  const scoredRows = new Map<number, ScoredRow>();
   let previousRegime: RegimeKey | undefined;
-  const scoredTrend: ScoredRow[] = [];
-  for (const index of selectedIndices) {
+  for (let index = 0; index <= currentIndex; index += 1) {
     const scored = scoreRow(rawRows, index, previousRegime);
     if (scored === null) continue;
     previousRegime = scored.regime;
+    scoredRows.set(index, scored);
+  }
+
+  const current = scoredRows.get(currentIndex);
+  if (current === undefined) throw new Error("Insufficient history to calculate live regime scores");
+
+  const selectedIndices = Array.from({ length: 12 }, (_, offset) => currentIndex - (11 - offset) * 5).filter((index) => index >= 0);
+  const trend: TrendPoint[] = [];
+  const scoredTrend: ScoredRow[] = [];
+  for (const index of selectedIndices) {
+    const scored = scoredRows.get(index);
+    if (scored === undefined) continue;
     scoredTrend.push(scored);
     trend.push({ date: scored.date, supply: scored.supplyScore, monetization: scored.monetizationScore, macro: scored.macroScore });
   }
@@ -507,7 +570,7 @@ export function buildLiveSnapshot(inputBars: DailyBar[], inputMacro: MacroObserv
     mode: "live",
     asOf,
     generatedAt,
-    freshness: `Market through ${asOf}; FRED observations use conservative estimated availability timestamps`,
+    freshness: `Market through ${asOf}; core benchmarks were ${round(benchmarkAgeHours, 1)} hours old at generation; FRED observations use conservative estimated availability timestamps`,
     coverage,
     regime: current.regime,
     confidence,

@@ -54,6 +54,7 @@ jobs:
           FRED_API_KEY: ${{ secrets.FRED_API_KEY }}
           TWELVE_DATA_CREDITS_PER_MINUTE: ${{ vars.TWELVE_DATA_CREDITS_PER_MINUTE || '8' }}
           COLLECTION_LOOKBACK_DAYS: ${{ vars.COLLECTION_LOOKBACK_DAYS || '500' }}
+          MAX_BENCHMARK_AGE_HOURS: ${{ vars.MAX_BENCHMARK_AGE_HOURS || '96' }}
 
       - name: Validate demo snapshot
         if: steps.mode.outputs.live != 'true'
