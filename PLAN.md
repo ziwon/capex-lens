@@ -192,7 +192,7 @@ GET /api/v1/reports
 GET /api/v1/reports/:period
 ```
 
-The scaffold implements the first three with demo data.
+The live-market branch implements health, snapshot, methodology, and metric-series endpoints. Report endpoints remain part of MVP 0.3.
 
 ## 9. Dashboard
 
@@ -228,12 +228,14 @@ A live snapshot will not publish when benchmark data is stale, basket coverage i
 
 ### M1 — live market pipeline
 
-- [ ] Select a licensed daily market-data provider
-- [ ] Create D1 and R2 resources
-- [ ] Collect market and FRED data
-- [ ] Implement corporate-action and freshness checks
-- [ ] Publish market-proxy regime snapshots
-- [ ] Add historical backfill and series API
+- [x] Select Twelve Data for private/internal daily market validation and document the public-display license boundary
+- [ ] Create production D1 and R2 resources
+- [x] Implement Twelve Data and FRED collectors with immutable raw payload capture
+- [ ] Complete independent corporate-action reconciliation; provider-adjusted prices are used meanwhile
+- [x] Implement freshness, coverage, finite-score, and evidence-reference publication gates
+- [x] Implement deterministic market-proxy regime snapshots and idempotent D1 publication
+- [x] Add approximately 500-calendar-day collection/backfill and the metric-series API
+- [ ] Run the first credentialed collection, inspect its artifact, and enable scheduled publication
 
 ### M2 — fundamental monetization
 
