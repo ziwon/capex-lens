@@ -15,9 +15,10 @@ The first live release labels the second axis **market-implied monetization**. R
 
 ## Status
 
-**Private MVP with an opt-in live pipeline.**
+**Production MVP with an opt-in live pipeline.**
 
-- Demo mode works without external infrastructure.
+- The production web application is deployed to `https://capex-lens.pages.dev`.
+- Demo mode works without external data-provider credentials.
 - Live collection uses Twelve Data adjusted daily US equity/ETF prices and FRED macro series.
 - Scores and regime classification are deterministic and versioned.
 - Raw API responses are archived before normalized observations and snapshots are published.
@@ -89,6 +90,14 @@ pnpm build
 pnpm dev:edge
 ```
 
+Run the Pages production topology locally. The Pages Function keeps the browser on
+the same origin and proxies only read-only `/api/*` requests to the Worker API:
+
+```bash
+pnpm build
+pnpm exec wrangler pages dev dist --cwd apps/web
+```
+
 Verify the repository:
 
 ```bash
@@ -150,6 +159,7 @@ Apply and publish manually:
 pnpm publish:live
 pnpm build
 pnpm exec wrangler deploy
+pnpm deploy:pages
 ```
 
 Required GitHub repository secrets:
@@ -177,7 +187,7 @@ The weekday workflow always creates a collection artifact. It publishes to Cloud
 ## Repository layout
 
 ```text
-apps/web/              React dashboard
+apps/web/              React dashboard and Cloudflare Pages API proxy
 workers/api/           Cloudflare Worker API and asset router
 packages/shared/       Cross-runtime data contracts and demo snapshot
 packages/indicators/   Deterministic indicator calculations

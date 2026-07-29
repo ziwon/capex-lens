@@ -29,8 +29,20 @@ jobs:
           pnpm test
           pnpm collect:demo
           pnpm build
-      - name: Deploy Worker and static assets
+      - name: Deploy Worker API and fallback site
         run: pnpm exec wrangler deploy
+        env:
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      - name: Deploy Pages production site
+        run: >-
+          pnpm exec wrangler pages deploy dist
+          --cwd apps/web
+          --project-name capex-lens
+          --branch main
+          --commit-hash "${GITHUB_SHA}"
+          --commit-message "Production deployment"
+          --commit-dirty=false
         env:
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}

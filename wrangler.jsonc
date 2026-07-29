@@ -10,6 +10,19 @@
     "not_found_handling": "single-page-application",
     "run_worker_first": ["/api/*"]
   },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "capex-lens",
+      "database_id": "c7be09eb-8619-4df2-9574-e6895dc6bdf1"
+    }
+  ],
+  "r2_buckets": [
+    {
+      "binding": "RAW",
+      "bucket_name": "capex-lens-raw"
+    }
+  ],
   "vars": {
     "DATA_MODE": "demo"
   },
