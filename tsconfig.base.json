@@ -4,6 +4,13 @@
     "lib": ["ES2022", "DOM", "DOM.Iterable"],
     "module": "ESNext",
     "moduleResolution": "Bundler",
+    "baseUrl": ".",
+    "paths": {
+      "@capex-lens/shared": ["packages/shared/src/index.ts"],
+      "@capex-lens/indicators": ["packages/indicators/src/index.ts"],
+      "@capex-lens/providers": ["packages/providers/src/index.ts"],
+      "@capex-lens/db": ["packages/db/src/index.ts"]
+    },
     "strict": true,
     "noUncheckedIndexedAccess": true,
     "exactOptionalPropertyTypes": true,
