@@ -24,7 +24,7 @@
     }
   ],
   "vars": {
-    "DATA_MODE": "demo"
+    "DATA_MODE": "live"
   },
   "observability": {
     "enabled": true,
