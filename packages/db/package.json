@@ -1,0 +1,10 @@
+{
+  "name": "@capex-lens/db",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": { ".": "./src/index.ts" },
+  "scripts": { "typecheck": "tsc --noEmit" },
+  "dependencies": { "@capex-lens/shared": "workspace:*" },
+  "devDependencies": { "@cloudflare/workers-types": "^5.20260719.1", "typescript": "^5.7.3" }
+}
