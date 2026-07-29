@@ -70,7 +70,7 @@ GET /api/v1/series/market.adjusted_close
 
 ## 6. Deploy the production web application
 
-The public Pages project serves the web application at `https://capex-6i1.pages.dev`.
+The public Pages project serves the web application at `https://capex-lens.pages.dev`.
 Its Pages Function proxies read-only `/api/*` requests to the Worker API, keeping
 the browser on a single origin.
 
@@ -81,9 +81,9 @@ pnpm deploy:pages
 Verify:
 
 ```text
-GET https://capex-6i1.pages.dev/
-GET https://capex-6i1.pages.dev/api/health
-GET https://capex-6i1.pages.dev/api/v1/snapshot
+GET https://capex-lens.pages.dev/
+GET https://capex-lens.pages.dev/api/health
+GET https://capex-lens.pages.dev/api/v1/snapshot
 ```
 
 ## 7. Scheduled publication

@@ -19,7 +19,7 @@
     "db:migrate:local": "wrangler d1 migrations apply capex-lens --local",
     "db:migrate:remote": "wrangler d1 migrations apply capex-lens --remote",
     "deploy": "pnpm build && wrangler deploy",
-    "deploy:pages": "pnpm build && wrangler pages deploy dist --cwd apps/web --project-name capex --branch main"
+    "deploy:pages": "pnpm build && wrangler pages deploy dist --cwd apps/web --project-name capex-lens --branch main"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^5.20260719.1",

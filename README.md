@@ -17,7 +17,7 @@ The first live release labels the second axis **market-implied monetization**. R
 
 **Production MVP with an opt-in live pipeline.**
 
-- The production web application is deployed to `https://capex-6i1.pages.dev`.
+- The production web application is deployed to `https://capex-lens.pages.dev`.
 - Demo mode works without external data-provider credentials.
 - Live collection uses Twelve Data adjusted daily US equity/ETF prices and FRED macro series.
 - Scores and regime classification are deterministic and versioned.

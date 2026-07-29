@@ -38,7 +38,7 @@ jobs:
         run: >-
           pnpm exec wrangler pages deploy dist
           --cwd apps/web
-          --project-name capex
+          --project-name capex-lens
           --branch main
           --commit-hash "${GITHUB_SHA}"
           --commit-message "Production deployment"
