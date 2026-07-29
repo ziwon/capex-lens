@@ -9,6 +9,21 @@ export interface Provenance {
   license: string;
 }
 
+export interface RawPayload {
+  provider: string;
+  sourceId: string;
+  objectKey: string;
+  sourceLocator: string;
+  fetchedAt: string;
+  contentType: "application/json" | "text/csv" | "text/plain";
+  contentHash: string;
+  schemaVersion: string;
+  license: string;
+  body: string;
+}
+
+export type RawPayloadSink = (payload: RawPayload) => Promise<void> | void;
+
 export interface DailyBar {
   symbol: string;
   sessionDate: string;
@@ -55,3 +70,6 @@ export interface FundamentalsProvider {
   readonly id: string;
   getCompanyFacts(companyIds: string[], since: string): Promise<FundamentalObservation[]>;
 }
+
+export { FredProvider, type FredProviderOptions } from "./fred";
+export { TwelveDataProvider, type TwelveDataProviderOptions } from "./twelve-data";

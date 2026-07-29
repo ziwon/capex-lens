@@ -1,4 +1,4 @@
-import type { RegimeKey } from "@capex-lens/shared";
+import type { RegimeKey, TrendDirection } from "@capex-lens/shared";
 
 export interface WeightedComponent { value: number | null; weight: number; }
 export interface RegimeInput {
@@ -49,6 +49,13 @@ export function clampScore(value: number): number {
   return Math.max(-100, Math.min(100, Math.round(value)));
 }
 
+export function scoreFromZ(zScore: number | null, direction = 1): number | null {
+  if (zScore === null) return null;
+  assertFinite(zScore, "zScore");
+  assertFinite(direction, "direction");
+  return clampScore(Math.tanh((zScore * direction) / 2) * 100);
+}
+
 export function weightedScore(components: WeightedComponent[], minimumCoverage = 0.7): number | null {
   if (components.length === 0) return null;
   const totalWeight = components.reduce((sum, component) => sum + component.weight, 0);
@@ -66,8 +73,28 @@ export function totalReturn(prices: number[]): number {
   if (prices.length < 2) throw new Error("totalReturn requires at least two prices");
   const first = prices[0];
   const last = prices.at(-1);
-  if (first === undefined || last === undefined || first <= 0) throw new Error("prices must contain positive finite values");
+  if (first === undefined || last === undefined || first <= 0 || !Number.isFinite(last)) {
+    throw new Error("prices must contain positive finite values");
+  }
   return (last / first - 1) * 100;
+}
+
+export function movingAverage(values: number[], period: number): number {
+  if (!Number.isInteger(period) || period <= 0) throw new Error("period must be a positive integer");
+  if (values.length < period) throw new Error(`movingAverage requires at least ${period} values`);
+  return mean(values.slice(-period));
+}
+
+export function currentDrawdown(prices: number[], lookback = prices.length): number {
+  if (!Number.isInteger(lookback) || lookback <= 0) throw new Error("lookback must be a positive integer");
+  if (prices.length === 0) throw new Error("currentDrawdown requires prices");
+  const window = prices.slice(-Math.min(lookback, prices.length));
+  window.forEach((price) => {
+    if (!Number.isFinite(price) || price <= 0) throw new Error("prices must be positive and finite");
+  });
+  const latest = window.at(-1);
+  if (latest === undefined) throw new Error("currentDrawdown invariant failed");
+  return (latest / Math.max(...window) - 1) * 100;
 }
 
 export function maxDrawdown(prices: number[]): number {
@@ -91,6 +118,14 @@ export function realizedVolatility(prices: number[], annualization = 252): numbe
     return Math.log(price / previous);
   });
   return standardDeviation(logReturns) * Math.sqrt(annualization) * 100;
+}
+
+export function trendDirection(current: number, previous: number, threshold = 3): TrendDirection {
+  assertFinite(current, "current");
+  assertFinite(previous, "previous");
+  if (current - previous > threshold) return "rising";
+  if (current - previous < -threshold) return "falling";
+  return "stable";
 }
 
 function scoreSide(value: number, band: number, previousPositive: boolean | undefined): boolean {
